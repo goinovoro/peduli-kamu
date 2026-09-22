@@ -1,0 +1,156 @@
+"use client";
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePeduliStore } from '@/store/usePeduliStore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { User, CheckCircle, XCircle, Clock, MapPin } from 'lucide-react';
+
+export default function CaregiverDashboard() {
+  const router = useRouter();
+  const { user, bookings, patients, acceptBooking, declineBooking } = usePeduliStore();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth');
+    } else if (user.role !== 'caregiver') {
+      router.push('/family/dashboard');
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== 'caregiver') return null;
+
+  // Mock matching caregiver profile for this session
+  // Usually this would come from a backend query matching user.id
+  const myProfile = usePeduliStore.getState().caregivers[0]; 
+  const myBookings = bookings.filter(b => b.caregiverId === myProfile.id);
+
+  const getPatient = (id: string) => patients.find(p => p.id === id);
+
+  return (
+    <div className="p-4 md:p-8 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard Mitra Perawat</h1>
+        <p className="text-gray-600 mt-2">Kelola profil, jadwal, dan terima permintaan kunjungan.</p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Profile and Settings */}
+        <div className="md:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profil & Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
+                  <User className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{myProfile.name}</h3>
+                  <p className="text-sm text-gray-500">{myProfile.university}</p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Tier Layanan</span>
+                  <span className="font-semibold capitalize">{myProfile.tier} Care</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Status STR/SIP</span>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${myProfile.strStatus === 'STR Aktif' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                    {myProfile.strStatus}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Tarif / Jam</span>
+                  <span className="font-semibold">Rp {myProfile.ratePerHour.toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ketersediaan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'].map((day) => (
+                  <div key={day} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{day}</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Shift Management */}
+        <div className="md:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Permintaan & Jadwal Masuk</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {myBookings.length > 0 ? (
+                  myBookings.map((booking) => {
+                    const patient = getPatient(booking.patientId);
+                    return (
+                      <div key={booking.id} className="p-5 border border-gray-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-lg">{patient?.name} ({patient?.age} th)</span>
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${booking.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                              {booking.status === 'pending' ? 'Menunggu Anda' : 'Dikonfirmasi'}
+                            </span>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
+                            <div className="flex items-center">
+                              <Clock className="w-4 h-4 mr-1.5" />
+                              {new Date(booking.date).toLocaleString('id-ID')}
+                            </div>
+                            <div className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1.5" />
+                              Jakarta Selatan
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {booking.status === 'pending' ? (
+                          <div className="flex space-x-2">
+                            <Button size="sm" onClick={() => acceptBooking(booking.id)} className="flex-1 sm:flex-none">
+                              <CheckCircle className="w-4 h-4 mr-1" /> Terima
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => declineBooking(booking.id)} className="flex-1 sm:flex-none text-red-600 border-red-200 hover:bg-red-50">
+                              <XCircle className="w-4 h-4 mr-1" /> Tolak
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="secondary" size="sm" disabled>
+                            Jadwal Diterima
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-10 text-gray-500">
+                    <p>Belum ada permintaan masuk.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
