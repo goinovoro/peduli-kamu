@@ -127,8 +127,11 @@ export default function FamilyDashboard() {
         {/* Caregiver Discovery */}
         <div className="md:col-span-2">
           <Card className="h-full bg-gray-50/50 border-none shadow-none">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Temukan Perawat Tersedia</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => router.push('/family/find')} className="text-primary-600 hover:text-primary-700">
+                Lihat Semua &rarr;
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-4">
