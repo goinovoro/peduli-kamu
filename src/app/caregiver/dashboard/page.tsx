@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { usePeduliStore } from '@/store/usePeduliStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { User, CheckCircle, XCircle, Clock, MapPin, Wallet, Info } from 'lucide-react';
+import { User, CheckCircle, XCircle, Clock, MapPin, Wallet, Info, Trophy, Star, ShieldCheck, Gift } from 'lucide-react';
 import { ShiftVerification } from '@/components/ui/ShiftVerification';
 
 export default function CaregiverDashboard() {
@@ -88,6 +88,62 @@ export default function CaregiverDashboard() {
                     </label>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-yellow-200 shadow-sm bg-gradient-to-b from-yellow-50 to-white">
+            <CardHeader className="pb-3 border-b border-yellow-100">
+              <CardTitle className="flex items-center text-yellow-800">
+                <Trophy className="w-5 h-5 mr-2 text-yellow-600" />
+                Peduli Kamu Rewards
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-bold text-gray-900 text-sm">
+                    {myProfile.level === 1 ? 'Level 1: Mitra Baru' :
+                     myProfile.level === 2 ? 'Level 2: Terpercaya' : 'Level 3: Ahli'}
+                  </span>
+                  <span className="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">
+                    {myProfile.level === 3 ? 'MAX' : `Level ${myProfile.level}`}
+                  </span>
+                </div>
+                
+                {myProfile.level < 3 && (
+                  <>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                      <div className="bg-yellow-400 h-2.5 rounded-full" 
+                        style={{ width: `${Math.min((myProfile.completedClients / (myProfile.level === 1 ? 5 : 20)) * 100, 100)}%` }}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Selesaikan <span className="font-bold">{ (myProfile.level === 1 ? 5 : 20) - myProfile.completedClients }</span> kunjungan lagi untuk naik ke Level {myProfile.level + 1}.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="bg-white p-3 rounded-lg border border-yellow-100 shadow-sm">
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Perks Aktif Anda</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-start text-sm">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span>Akses ke Bursa Permintaan</span>
+                  </li>
+                  {myProfile.level >= 2 && (
+                    <li className="flex items-start text-sm">
+                      <Star className="w-4 h-4 text-yellow-500 mr-2 shrink-0 mt-0.5" />
+                      <span className="font-medium text-yellow-800">Bonus Fee 5% tiap shift</span>
+                    </li>
+                  )}
+                  {myProfile.level >= 3 && (
+                    <li className="flex items-start text-sm">
+                      <ShieldCheck className="w-4 h-4 text-blue-500 mr-2 shrink-0 mt-0.5" />
+                      <span className="font-medium text-blue-800">Merchandise Eksklusif Lencana</span>
+                    </li>
+                  )}
+                </ul>
               </div>
             </CardContent>
           </Card>

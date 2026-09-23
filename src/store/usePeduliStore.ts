@@ -37,6 +37,7 @@ export interface Caregiver {
   location: string;
   walletBalance: number;
   completedClients: number;
+  level: 1 | 2 | 3;
   rating: number;
   specializations: string[];
   isVerified: boolean;
@@ -95,6 +96,7 @@ const mockCaregivers: Caregiver[] = [
     location: 'Jakarta Selatan',
     walletBalance: 150000,
     completedClients: 1, // Under the threshold to test Deposit Lock
+    level: 1,
     rating: 4.8,
     specializations: ['Perawatan Pasca Operasi', 'Perawatan Luka'],
     isVerified: true,
@@ -114,6 +116,7 @@ const mockCaregivers: Caregiver[] = [
     location: 'Bandung',
     walletBalance: 800000,
     completedClients: 5,
+    level: 2,
     rating: 4.9,
     specializations: ['Pendampingan Lansia', 'Pencegahan Demensia'],
     isVerified: true,
@@ -132,6 +135,7 @@ const mockCaregivers: Caregiver[] = [
     location: 'Jakarta Timur',
     walletBalance: 0,
     completedClients: 0,
+    level: 1,
     rating: 0,
     specializations: ['Fisioterapi Dasar', 'Perawatan Stroke'],
     isVerified: false,
@@ -190,12 +194,25 @@ export const usePeduliStore = create<PeduliState>((set) => ({
   submitVerification: (bookingId, photoUrl, location) => set((state) => ({
     bookings: state.bookings.map((b) => b.id === bookingId ? { ...b, status: 'awaiting_approval', verificationData: { photoUrl, location } } : b)
   })),
-  approveVerificationAndPay: (bookingId, caregiverId, amount) => set((state) => ({
-    bookings: state.bookings.map((b) => b.id === bookingId ? { ...b, status: 'past' } : b),
-    caregivers: state.caregivers.map((c) => c.id === caregiverId ? { 
-      ...c, 
-      walletBalance: c.walletBalance + amount,
-      completedClients: c.completedClients + 1
-    } : c)
-  }))
+  approveVerificationAndPay: (bookingId, caregiverId, amount) => set((state) => {
+    return {
+      bookings: state.bookings.map((b) => b.id === bookingId ? { ...b, status: 'past' } : b),
+      caregivers: state.caregivers.map((c) => {
+        if (c.id === caregiverId) {
+          const newCompleted = c.completedClients + 1;
+          let newLevel: 1 | 2 | 3 = 1;
+          if (newCompleted >= 20) newLevel = 3;
+          else if (newCompleted >= 5) newLevel = 2;
+          
+          return { 
+            ...c, 
+            walletBalance: c.walletBalance + amount,
+            completedClients: newCompleted,
+            level: newLevel
+          };
+        }
+        return c;
+      })
+    };
+  })
 }));
