@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HeartPulse, Menu, X, LogOut, User as UserIcon, Search, Briefcase } from 'lucide-react';
+import { Menu, X, LogOut, User as UserIcon, Search, Briefcase } from 'lucide-react';
 import { usePeduliStore } from '@/store/usePeduliStore';
 import { Button } from '@/components/ui/Button';
 
@@ -16,7 +16,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2 text-primary-600">
-          <HeartPulse className="h-6 w-6" />
+          <img src="/logo.png" alt="Peduli Kamu Logo" className="h-8 object-contain" />
           <span className="font-bold text-lg tracking-tight">Peduli Kamu</span>
         </Link>
         
