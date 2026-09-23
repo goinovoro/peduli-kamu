@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { usePeduliStore } from '@/store/usePeduliStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { User, CheckCircle, XCircle, Clock, MapPin } from 'lucide-react';
+import { User, CheckCircle, XCircle, Clock, MapPin, Wallet, Info } from 'lucide-react';
+import { ShiftVerification } from '@/components/ui/ShiftVerification';
 
 export default function CaregiverDashboard() {
   const router = useRouter();
@@ -90,10 +91,67 @@ export default function CaregiverDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Dompet Digital</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 font-medium">Saldo Tersedia</div>
+                  <div className="text-xl font-bold">Rp {myProfile.walletBalance.toLocaleString('id-ID')}</div>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Total Pasien Dilayani</span>
+                  <span className="font-semibold">{myProfile.completedClients} / 3</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-primary-500 h-2 rounded-full" style={{ width: `${Math.min((myProfile.completedClients / 3) * 100, 100)}%` }}></div>
+                </div>
+                
+                {myProfile.completedClients < 3 ? (
+                  <div className="flex items-start p-3 bg-blue-50 text-blue-800 rounded-lg text-xs">
+                    <Info className="w-4 h-4 mr-2 shrink-0 mt-0.5" />
+                    <span>Fitur tarik dana dikunci. Anda harus menyelesaikan minimal 3 kunjungan pertama sebagai jaminan kualitas layanan (Retention Policy).</span>
+                  </div>
+                ) : null}
+
+                <Button 
+                  className="w-full mt-4" 
+                  disabled={myProfile.completedClients < 3 || myProfile.walletBalance === 0}
+                  onClick={() => alert('Dana berhasil ditarik ke rekening bank Anda!')}
+                >
+                  Tarik Dana
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Shift Management */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-6">
+          {/* Active Shift / Verification */}
+          {myBookings.some(b => b.status === 'upcoming') && (
+            <Card className="border-primary-200 shadow-md">
+              <CardHeader className="bg-primary-50 rounded-t-xl border-b border-primary-100">
+                <CardTitle className="text-primary-800">Selesaikan Kunjungan Aktif</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <p className="text-gray-600 mb-6 text-center">Silakan ambil selfie bersama pasien di lokasi untuk memvalidasi kunjungan Anda. Sistem akan mencatat lokasi GPS Anda secara otomatis.</p>
+                {myBookings.filter(b => b.status === 'upcoming').map(booking => (
+                  <ShiftVerification key={booking.id} bookingId={booking.id} />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Permintaan & Jadwal Masuk</CardTitle>

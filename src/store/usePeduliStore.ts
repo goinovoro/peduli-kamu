@@ -26,6 +26,8 @@ export interface Caregiver {
   strStatus: 'Menunggu STR' | 'STR Aktif';
   tier: CareTier;
   location: string;
+  walletBalance: number;
+  completedClients: number;
 }
 
 export interface Booking {
@@ -33,7 +35,12 @@ export interface Booking {
   patientId: string;
   caregiverId: string;
   date: string;
-  status: 'upcoming' | 'past' | 'pending';
+  status: 'upcoming' | 'past' | 'pending' | 'awaiting_approval';
+  price: number;
+  verificationData?: {
+    photoUrl: string;
+    location: string;
+  };
 }
 
 export interface Job {
@@ -59,6 +66,8 @@ interface PeduliState {
   acceptBooking: (bookingId: string) => void;
   declineBooking: (bookingId: string) => void;
   addJob: (job: Job) => void;
+  submitVerification: (bookingId: string, photoUrl: string, location: string) => void;
+  approveVerificationAndPay: (bookingId: string, caregiverId: string, amount: number) => void;
 }
 
 const mockCaregivers: Caregiver[] = [
@@ -70,7 +79,9 @@ const mockCaregivers: Caregiver[] = [
     ratePerHour: 75000,
     strStatus: 'STR Aktif',
     tier: 'skilled',
-    location: 'Jakarta Selatan'
+    location: 'Jakarta Selatan',
+    walletBalance: 150000,
+    completedClients: 1, // Under the threshold to test Deposit Lock
   },
   {
     id: 'c2',
@@ -80,7 +91,9 @@ const mockCaregivers: Caregiver[] = [
     ratePerHour: 50000,
     strStatus: 'Menunggu STR',
     tier: 'companion',
-    location: 'Bandung'
+    location: 'Bandung',
+    walletBalance: 800000,
+    completedClients: 5,
   },
   {
     id: 'c3',
@@ -90,7 +103,9 @@ const mockCaregivers: Caregiver[] = [
     ratePerHour: 80000,
     strStatus: 'STR Aktif',
     tier: 'skilled',
-    location: 'Jakarta Timur'
+    location: 'Jakarta Timur',
+    walletBalance: 0,
+    completedClients: 0,
   }
 ];
 
@@ -99,8 +114,8 @@ const mockPatients: Patient[] = [
 ];
 
 const mockBookings: Booking[] = [
-  { id: 'b1', patientId: 'p1', caregiverId: 'c1', date: '2026-10-01T09:00:00Z', status: 'upcoming' },
-  { id: 'b2', patientId: 'p1', caregiverId: 'c2', date: '2026-10-05T14:00:00Z', status: 'pending' },
+  { id: 'b1', patientId: 'p1', caregiverId: 'c1', date: '2026-10-01T09:00:00Z', status: 'upcoming', price: 300000 },
+  { id: 'b2', patientId: 'p1', caregiverId: 'c2', date: '2026-10-05T14:00:00Z', status: 'pending', price: 200000 },
 ];
 
 const mockJobs: Job[] = [
@@ -141,5 +156,16 @@ export const usePeduliStore = create<PeduliState>((set) => ({
   declineBooking: (bookingId) => set((state) => ({
     bookings: state.bookings.filter((b) => b.id !== bookingId)
   })),
-  addJob: (job) => set((state) => ({ jobs: [job, ...state.jobs] }))
+  addJob: (job) => set((state) => ({ jobs: [job, ...state.jobs] })),
+  submitVerification: (bookingId, photoUrl, location) => set((state) => ({
+    bookings: state.bookings.map((b) => b.id === bookingId ? { ...b, status: 'awaiting_approval', verificationData: { photoUrl, location } } : b)
+  })),
+  approveVerificationAndPay: (bookingId, caregiverId, amount) => set((state) => ({
+    bookings: state.bookings.map((b) => b.id === bookingId ? { ...b, status: 'past' } : b),
+    caregivers: state.caregivers.map((c) => c.id === caregiverId ? { 
+      ...c, 
+      walletBalance: c.walletBalance + amount,
+      completedClients: c.completedClients + 1
+    } : c)
+  }))
 }));
