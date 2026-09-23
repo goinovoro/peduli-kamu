@@ -17,6 +17,15 @@ export interface Patient {
   tier: CareTier;
 }
 
+export interface Review {
+  id: string;
+  familyId: string;
+  familyName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
 export interface Caregiver {
   id: string;
   name: string;
@@ -28,6 +37,10 @@ export interface Caregiver {
   location: string;
   walletBalance: number;
   completedClients: number;
+  rating: number;
+  specializations: string[];
+  isVerified: boolean;
+  reviews: Review[];
 }
 
 export interface Booking {
@@ -82,6 +95,13 @@ const mockCaregivers: Caregiver[] = [
     location: 'Jakarta Selatan',
     walletBalance: 150000,
     completedClients: 1, // Under the threshold to test Deposit Lock
+    rating: 4.8,
+    specializations: ['Perawatan Pasca Operasi', 'Perawatan Luka'],
+    isVerified: true,
+    reviews: [
+      { id: 'r1', familyId: 'f1', familyName: 'Keluarga Budi', rating: 5, comment: 'Suster Siti sangat telaten merawat ayah saya pasca operasi. Sangat direkomendasikan!', date: '2026-09-10T10:00:00Z' },
+      { id: 'r2', familyId: 'f2', familyName: 'Keluarga Andi', rating: 4, comment: 'Kerjanya bagus dan tepat waktu.', date: '2026-09-15T14:30:00Z' }
+    ]
   },
   {
     id: 'c2',
@@ -94,6 +114,12 @@ const mockCaregivers: Caregiver[] = [
     location: 'Bandung',
     walletBalance: 800000,
     completedClients: 5,
+    rating: 4.9,
+    specializations: ['Pendampingan Lansia', 'Pencegahan Demensia'],
+    isVerified: true,
+    reviews: [
+      { id: 'r3', familyId: 'f3', familyName: 'Keluarga Citra', rating: 5, comment: 'Mas Budi sangat sabar menemani nenek jalan pagi.', date: '2026-08-20T08:00:00Z' }
+    ]
   },
   {
     id: 'c3',
@@ -106,6 +132,10 @@ const mockCaregivers: Caregiver[] = [
     location: 'Jakarta Timur',
     walletBalance: 0,
     completedClients: 0,
+    rating: 0,
+    specializations: ['Fisioterapi Dasar', 'Perawatan Stroke'],
+    isVerified: false,
+    reviews: []
   }
 ];
 

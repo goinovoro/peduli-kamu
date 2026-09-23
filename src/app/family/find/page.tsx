@@ -132,7 +132,7 @@ export default function FindCaregiverPage() {
                           Rp {caregiver.ratePerHour.toLocaleString('id-ID')}
                           <span className="text-xs text-gray-500 font-normal ml-1">/ jam</span>
                         </div>
-                        <Button size="sm" onClick={() => alert(`Fitur booking untuk ${caregiver.name} akan segera hadir!`)}>Booking</Button>
+                        <Button size="sm" onClick={() => router.push(`/mitra/${caregiver.id}`)}>Lihat Profil</Button>
                       </div>
                     </div>
                   </CardContent>
