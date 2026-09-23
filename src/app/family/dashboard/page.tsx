@@ -124,8 +124,20 @@ export default function FamilyDashboard() {
           </Card>
         </div>
 
-        {/* Caregiver Discovery */}
-        <div className="md:col-span-2">
+        {/* Caregiver Discovery & Custom Jobs */}
+        <div className="md:col-span-2 space-y-8">
+          <Card className="bg-primary-50 border-primary-100">
+            <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-lg text-primary-900">Butuh Perawatan Spesifik?</h3>
+                <p className="text-sm text-primary-700">Posting permintaan khusus Anda dan biarkan perawat yang mengajukan penawaran.</p>
+              </div>
+              <Button onClick={() => router.push('/jobs/new')} className="shrink-0">
+                Buat Permintaan Khusus
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card className="h-full bg-gray-50/50 border-none shadow-none">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Temukan Perawat Tersedia</CardTitle>

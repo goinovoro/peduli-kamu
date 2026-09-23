@@ -36,16 +36,29 @@ export interface Booking {
   status: 'upcoming' | 'past' | 'pending';
 }
 
+export interface Job {
+  id: string;
+  familyId: string;
+  title: string;
+  description: string;
+  location: string;
+  budget: number;
+  status: 'open' | 'closed';
+  createdAt: string;
+}
+
 interface PeduliState {
   user: User | null;
   patients: Patient[];
   caregivers: Caregiver[];
   bookings: Booking[];
+  jobs: Job[];
   login: (user: User) => void;
   logout: () => void;
   addPatient: (patient: Patient) => void;
   acceptBooking: (bookingId: string) => void;
   declineBooking: (bookingId: string) => void;
+  addJob: (job: Job) => void;
 }
 
 const mockCaregivers: Caregiver[] = [
@@ -90,11 +103,35 @@ const mockBookings: Booking[] = [
   { id: 'b2', patientId: 'p1', caregiverId: 'c2', date: '2026-10-05T14:00:00Z', status: 'pending' },
 ];
 
+const mockJobs: Job[] = [
+  {
+    id: 'j1',
+    familyId: 'f1',
+    title: 'Perawatan Pasca Operasi Jantung',
+    description: 'Dibutuhkan perawat terampil (STR Aktif) untuk merawat ayah saya pasca operasi selama 2 minggu ke depan. Tugas meliputi pemantauan vital dan perawatan luka.',
+    location: 'Jakarta Selatan',
+    budget: 120000,
+    status: 'open',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'j2',
+    familyId: 'f2',
+    title: 'Pendampingan Harian Nenek',
+    description: 'Mencari perawat tier 1 untuk mendampingi nenek jalan pagi, mengingatkan obat, dan menemani aktivitas ringan dari jam 8 pagi sampai 12 siang.',
+    location: 'Bandung',
+    budget: 50000,
+    status: 'open',
+    createdAt: new Date().toISOString()
+  }
+];
+
 export const usePeduliStore = create<PeduliState>((set) => ({
   user: null, // Start logged out
   patients: mockPatients,
   caregivers: mockCaregivers,
   bookings: mockBookings,
+  jobs: mockJobs,
   login: (user) => set({ user }),
   logout: () => set({ user: null }),
   addPatient: (patient) => set((state) => ({ patients: [...state.patients, patient] })),
@@ -103,5 +140,6 @@ export const usePeduliStore = create<PeduliState>((set) => ({
   })),
   declineBooking: (bookingId) => set((state) => ({
     bookings: state.bookings.filter((b) => b.id !== bookingId)
-  }))
+  })),
+  addJob: (job) => set((state) => ({ jobs: [job, ...state.jobs] }))
 }));

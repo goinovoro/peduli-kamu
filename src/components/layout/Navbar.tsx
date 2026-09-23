@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HeartPulse, Menu, X, LogOut, User as UserIcon, Search } from 'lucide-react';
+import { HeartPulse, Menu, X, LogOut, User as UserIcon, Search, Briefcase } from 'lucide-react';
 import { usePeduliStore } from '@/store/usePeduliStore';
 import { Button } from '@/components/ui/Button';
 
@@ -26,10 +26,25 @@ export function Navbar() {
             <>
               <span className="text-sm text-gray-500 font-medium mr-2">Halo, {user.name}</span>
               {user.role === 'family' && (
-                <Link href="/family/find">
+                <>
+                  <Link href="/packages">
+                    <Button variant="ghost" size="sm" className="space-x-2">
+                      <span>Paket Layanan</span>
+                    </Button>
+                  </Link>
+                  <Link href="/family/find">
+                    <Button variant="ghost" size="sm" className="space-x-2">
+                      <Search className="w-4 h-4" />
+                      <span>Cari Perawat</span>
+                    </Button>
+                  </Link>
+                </>
+              )}
+              {user.role === 'caregiver' && (
+                <Link href="/dashboard/jobs">
                   <Button variant="ghost" size="sm" className="space-x-2">
-                    <Search className="w-4 h-4" />
-                    <span>Cari Perawat</span>
+                    <Briefcase className="w-4 h-4" />
+                    <span>Bursa Permintaan</span>
                   </Button>
                 </Link>
               )}
@@ -66,10 +81,25 @@ export function Navbar() {
             <>
               <div className="px-2 py-1 text-sm font-medium text-gray-500">Halo, {user.name}</div>
               {user.role === 'family' && (
-                <Link href="/family/find" onClick={toggleMenu}>
+                <>
+                  <Link href="/packages" onClick={toggleMenu}>
+                    <Button variant="ghost" className="w-full justify-start space-x-2">
+                      <span>Paket Layanan</span>
+                    </Button>
+                  </Link>
+                  <Link href="/family/find" onClick={toggleMenu}>
+                    <Button variant="ghost" className="w-full justify-start space-x-2">
+                      <Search className="w-4 h-4" />
+                      <span>Cari Perawat</span>
+                    </Button>
+                  </Link>
+                </>
+              )}
+              {user.role === 'caregiver' && (
+                <Link href="/dashboard/jobs" onClick={toggleMenu}>
                   <Button variant="ghost" className="w-full justify-start space-x-2">
-                    <Search className="w-4 h-4" />
-                    <span>Cari Perawat</span>
+                    <Briefcase className="w-4 h-4" />
+                    <span>Bursa Permintaan</span>
                   </Button>
                 </Link>
               )}
