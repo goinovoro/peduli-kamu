@@ -24,25 +24,9 @@ export function ShiftVerification({ bookingId, onVerified }: ShiftVerificationPr
     if (imageSrc) {
       setImgSrc(imageSrc);
       
-      // Get Geolocation
-      setIsLocating(true);
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-            setIsLocating(false);
-          },
-          (error) => {
-            console.error('Error getting location', error);
-            setLocation('Lokasi tidak tersedia');
-            setIsLocating(false);
-          }
-        );
-      } else {
-        setLocation('Geolocation tidak didukung');
-        setIsLocating(false);
-      }
+      // Geolocation is deactivated for now
+      setLocation('Lokasi tidak tersedia (fitur dinonaktifkan)');
+      setIsLocating(false);
     }
   }, [webcamRef]);
 
