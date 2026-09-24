@@ -61,6 +61,12 @@ function AuthForm() {
 
         if (error) throw error;
         
+        // If email confirmation is required, session will be null
+        if (data.user && !data.session) {
+          setErrorMsg('Pendaftaran berhasil! Silakan periksa kotak masuk/spam email Anda untuk verifikasi.');
+          return; // Stop here, do not redirect yet
+        }
+        
         if (data.user) {
            login({
             id: data.user.id,
