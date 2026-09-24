@@ -47,6 +47,12 @@ function AuthForm() {
             email: data.user.email || email
           });
         }
+        const actualRole = data.user?.user_metadata?.role || role;
+        if (actualRole === 'family') {
+          window.location.href = '/family/dashboard';
+        } else {
+          window.location.href = '/caregiver/dashboard';
+        }
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -75,12 +81,12 @@ function AuthForm() {
             email: email
           });
         }
-      }
-
-      if (role === 'family') {
-        router.push('/family/dashboard');
-      } else {
-        router.push('/caregiver/dashboard');
+        
+        if (role === 'family') {
+          window.location.href = '/family/dashboard';
+        } else {
+          window.location.href = '/caregiver/dashboard';
+        }
       }
     } catch (error: any) {
       setErrorMsg(error.message || 'Terjadi kesalahan');
