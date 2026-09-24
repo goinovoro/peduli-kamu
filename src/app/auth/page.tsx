@@ -6,6 +6,7 @@ import { usePeduliStore, Role } from '@/store/usePeduliStore';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { createClient } from '@/lib/supabase/client';
 
 function AuthForm() {
   const router = useRouter();
@@ -15,23 +16,70 @@ function AuthForm() {
   const [role, setRole] = useState<Role>(defaultRole);
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   
   const { login } = usePeduliStore();
+  const supabase = createClient();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate authentication
-    const user = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: name || (role === 'family' ? 'Keluarga Budi' : 'Ners Ana'),
-      role: role,
-      email: 'user@example.com'
-    };
-    login(user);
-    if (role === 'family') {
-      router.push('/family/dashboard');
-    } else {
-      router.push('/caregiver/dashboard');
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+        
+        // Push user state to Zustand
+        if (data.user) {
+          login({
+            id: data.user.id,
+            name: data.user.user_metadata?.name || 'User',
+            role: (data.user.user_metadata?.role as Role) || role,
+            email: data.user.email || email
+          });
+        }
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: name,
+              role: role,
+            }
+          }
+        });
+
+        if (error) throw error;
+        
+        if (data.user) {
+           login({
+            id: data.user.id,
+            name: name,
+            role: role,
+            email: email
+          });
+        }
+      }
+
+      if (role === 'family') {
+        router.push('/family/dashboard');
+      } else {
+        router.push('/caregiver/dashboard');
+      }
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Terjadi kesalahan');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,6 +112,11 @@ function AuthForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMsg && (
+            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+              {errorMsg}
+            </div>
+          )}
           {!isLogin && (
             <Input 
               label="Nama Lengkap" 
@@ -73,10 +126,24 @@ function AuthForm() {
               required
             />
           )}
-          <Input label="Email" type="email" placeholder="contoh@email.com" required />
-          <Input label="Kata Sandi" type="password" placeholder="••••••••" required />
-          <Button type="submit" className="w-full mt-2">
-            {isLogin ? 'Masuk' : 'Daftar'}
+          <Input 
+            label="Email" 
+            type="email" 
+            placeholder="contoh@email.com" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required 
+          />
+          <Input 
+            label="Kata Sandi" 
+            type="password" 
+            placeholder="••••••••" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required 
+          />
+          <Button type="submit" className="w-full mt-2" disabled={loading}>
+            {loading ? 'Memproses...' : (isLogin ? 'Masuk' : 'Daftar')}
           </Button>
         </form>
       </CardContent>
