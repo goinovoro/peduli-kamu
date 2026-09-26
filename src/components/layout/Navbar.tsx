@@ -58,12 +58,12 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/auth">
+              <a href="/auth">
                 <Button variant="ghost" size="sm">Masuk</Button>
-              </Link>
-              <Link href="/auth">
+              </a>
+              <a href="/auth">
                 <Button size="sm">Daftar</Button>
-              </Link>
+              </a>
             </>
           )}
         </div>
@@ -82,46 +82,38 @@ export function Navbar() {
               <div className="px-2 py-1 text-sm font-medium text-gray-500">Halo, {user.name}</div>
               {user.role === 'family' && (
                 <>
-                  <Link href="/packages" onClick={toggleMenu}>
-                    <Button variant="ghost" className="w-full justify-start space-x-2">
-                      <span>Paket Layanan</span>
-                    </Button>
-                  </Link>
-                  <Link href="/family/find" onClick={toggleMenu}>
-                    <Button variant="ghost" className="w-full justify-start space-x-2">
-                      <Search className="w-4 h-4" />
-                      <span>Cari Perawat</span>
-                    </Button>
-                  </Link>
+                  <a href="/packages" onClick={toggleMenu} className="w-full justify-start space-x-2 inline-flex items-center rounded-xl transition-colors text-foreground hover:bg-primary-50 px-4 py-2 text-base">
+                    <span>Paket Layanan</span>
+                  </a>
+                  <a href="/family/find" onClick={toggleMenu} className="w-full justify-start space-x-2 inline-flex items-center rounded-xl transition-colors text-foreground hover:bg-primary-50 px-4 py-2 text-base">
+                    <Search className="w-4 h-4" />
+                    <span>Cari Perawat</span>
+                  </a>
                 </>
               )}
               {user.role === 'caregiver' && (
-                <Link href="/dashboard/jobs" onClick={toggleMenu}>
-                  <Button variant="ghost" className="w-full justify-start space-x-2">
-                    <Briefcase className="w-4 h-4" />
-                    <span>Bursa Permintaan</span>
-                  </Button>
-                </Link>
+                <a href="/dashboard/jobs" onClick={toggleMenu} className="w-full justify-start space-x-2 inline-flex items-center rounded-xl transition-colors text-foreground hover:bg-primary-50 px-4 py-2 text-base">
+                  <Briefcase className="w-4 h-4" />
+                  <span>Bursa Permintaan</span>
+                </a>
               )}
-              <Link href={user.role === 'family' ? '/family/dashboard' : '/caregiver/dashboard'} onClick={toggleMenu}>
-                <Button variant="ghost" className="w-full justify-start space-x-2">
-                  <UserIcon className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </Button>
-              </Link>
-              <Button variant="outline" className="w-full justify-start space-x-2 text-red-500 border-red-100 hover:bg-red-50" onClick={() => { logout(); toggleMenu(); }}>
+              <a href={user.role === 'family' ? '/family/dashboard' : '/caregiver/dashboard'} onClick={toggleMenu} className="w-full justify-start space-x-2 inline-flex items-center rounded-xl transition-colors text-foreground hover:bg-primary-50 px-4 py-2 text-base">
+                <UserIcon className="w-4 h-4" />
+                <span>Dashboard</span>
+              </a>
+              <button className="w-full justify-start space-x-2 inline-flex items-center rounded-xl transition-colors border border-primary-500 text-red-500 border-red-100 hover:bg-red-50 px-4 py-2 text-base" onClick={() => { logout(); toggleMenu(); }}>
                 <LogOut className="w-4 h-4" />
                 <span>Keluar</span>
-              </Button>
+              </button>
             </>
           ) : (
             <>
-              <Link href="/auth" onClick={toggleMenu}>
-                <Button variant="ghost" className="w-full justify-start">Masuk</Button>
-              </Link>
-              <Link href="/auth" onClick={toggleMenu}>
-                <Button className="w-full justify-start">Daftar</Button>
-              </Link>
+              <a href="/auth" onClick={toggleMenu} className="w-full justify-start inline-flex items-center rounded-xl transition-colors text-foreground hover:bg-primary-50 px-4 py-2 text-base">
+                Masuk
+              </a>
+              <a href="/auth" onClick={toggleMenu} className="w-full justify-start inline-flex items-center rounded-xl transition-colors bg-primary-500 text-white hover:bg-primary-600 px-4 py-2 text-base">
+                Daftar
+              </a>
             </>
           )}
         </div>

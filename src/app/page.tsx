@@ -15,17 +15,13 @@ export default function Home() {
           Menghubungkan keluarga dengan lulusan perawat bersertifikat untuk memberikan asuhan terbaik di rumah Anda.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full sm:w-auto px-4 sm:px-0">
-          <Link href="/auth?role=family" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full text-base font-semibold space-x-2">
-              <HeartHandshake className="w-5 h-5" />
-              <span>Temukan Perawat</span>
-            </Button>
+          <Link href="/auth?role=family" className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 bg-primary-500 text-white hover:bg-primary-600 px-6 py-3 text-lg font-semibold space-x-2">
+            <HeartHandshake className="w-5 h-5" />
+            <span>Temukan Perawat</span>
           </Link>
-          <Link href="/auth?role=caregiver" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="w-full text-base font-semibold space-x-2 bg-white">
-              <UserPlus className="w-5 h-5" />
-              <span>Gabung Mitra</span>
-            </Button>
+          <Link href="/auth?role=caregiver" className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 border border-primary-500 text-primary-500 hover:bg-primary-50 bg-white px-6 py-3 text-lg font-semibold space-x-2">
+            <UserPlus className="w-5 h-5" />
+            <span>Gabung Mitra</span>
           </Link>
         </div>
       </section>
