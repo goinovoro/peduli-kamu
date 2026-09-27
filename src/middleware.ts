@@ -48,12 +48,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }
 
-  if (isAuthRoute && user) {
-    // Redirect away from auth if already logged in (would need custom logic for which dashboard)
-    // For now, default redirect to home or check role if we had metadata
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
   return supabaseResponse;
 }
 
