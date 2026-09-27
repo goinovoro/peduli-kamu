@@ -49,9 +49,9 @@ function AuthForm() {
         }
         const actualRole = data.user?.user_metadata?.role || role;
         if (actualRole === 'family') {
-          window.location.href = '/family/dashboard';
+          router.push('/family/dashboard');
         } else {
-          window.location.href = '/caregiver/dashboard';
+          router.push('/caregiver/dashboard');
         }
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -83,9 +83,9 @@ function AuthForm() {
         }
         
         if (role === 'family') {
-          window.location.href = '/family/dashboard';
+          router.push('/family/dashboard');
         } else {
-          window.location.href = '/caregiver/dashboard';
+          router.push('/caregiver/dashboard');
         }
       }
     } catch (error: any) {
