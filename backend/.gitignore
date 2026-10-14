@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.vercel/
+*.tsbuildinfo
+
+# Secrets and local uploads must never be pushed
+.env
+.env.*
+!.env.example
+uploads/

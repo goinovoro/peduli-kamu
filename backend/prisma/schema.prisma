@@ -1,0 +1,576 @@
+// PeduliKamu — Prisma schema
+// Fondasi lama (User/Patient/Caregiver/Booking) dipertahankan apa adanya agar
+// data + modul bookings yang sudah jalan tidak rusak.
+// Model baru (Need → Interest → Contract → Payment/Payout/Deposit/Attendance/...)
+// diturunkan dari docs/ERD.md + docs/FEATURE_CHECKLIST.md (ID A–Q).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  family
+  caregiver
+  admin
+  PASIEN
+  MITRA
+}
+
+enum CareTier {
+  companion
+  skilled
+}
+
+enum StrStatus {
+  MENUNGGU_STR
+  STR_AKTIF
+}
+
+enum BookingStatus {
+  pending
+  upcoming
+  past
+  cancelled
+}
+
+enum AccountStatus {
+  BELUM_LENGKAP
+  AKTIF
+  TIDAK_AKTIF
+  DITANGGUHKAN
+  DIBLOKIR
+  TERKUNCI_PERIODE
+  DIBEKUKAN
+}
+
+enum VerificationStatus {
+  MENUNGGU
+  DITINJAU
+  DISETUJUI
+  DITOLAK
+  PERLU_PERBAIKAN
+}
+
+enum NeedStatus {
+  DRAFT
+  DIPUBLIKASIKAN
+  DALAM_PEMBAHASAN
+  DEAL
+  MENUNGGU_PEMBAYARAN
+  SIAP_JALAN
+  BERJALAN
+  SELESAI
+  DIBATALKAN
+  SENGKETA
+}
+
+enum InterestStatus {
+  MENUNGGU_RESPON
+  DITERIMA
+  DITOLAK
+  DIBATALKAN
+}
+
+enum ContractStatus {
+  DEAL_MENUNGGU_BAYAR
+  DIBAYAR_DITAHAN
+  SIAP_JALAN
+  BERJALAN
+  MENUNGGU_KONFIRMASI
+  SELESAI
+  DIBATALKAN_PASIEN
+  DIBATALKAN_MITRA
+  SENGKETA
+}
+
+enum PaymentType {
+  SERVICE
+  COMMITMENT
+}
+
+enum PaymentStatus {
+  MENUNGGU_BAYAR
+  MENUNGGU_VERIFIKASI
+  DIBAYAR_DITAHAN
+  DITERUSKAN_PAYOUT
+  DIKEMBALIKAN_SEBAGIAN
+  DITAHAN_SENGKETA
+  GAGAL
+  DITOLAK
+}
+
+enum PayoutStatus {
+  BELUM_LAYAK
+  LAYAK_BAYAR
+  DIPROSES
+  DIBAYARKAN
+  DIBAYARKAN_SEBAGIAN
+  GAGAL
+  DITAHAN
+}
+
+enum PayoutReason {
+  SELESAI_NORMAL
+  PASIEN_BATAL
+}
+
+enum DepositStatus {
+  MENUNGGU_VERIFIKASI
+  AKTIF
+  KEDALUWARSA
+  DIPERBARUI
+  HANGUS_TERTANAM
+  HANGUS_PELANGGARAN
+  DIKEMBALIKAN
+  DITOLAK
+}
+
+enum AttendanceType {
+  CLOCK_IN
+  CLOCK_OUT
+}
+
+enum AttendanceStatus {
+  MENUNGGU_APPROVAL_PASIEN
+  DISETUJUI
+  DITOLAK
+  DISETUJUI_ADMIN
+  DITOLAK_ADMIN
+}
+
+enum DocumentKind {
+  KTP
+  IJAZAH
+  SERTIFIKAT
+  STR
+  LAINNYA
+}
+
+enum DocumentStatus {
+  MENUNGGU
+  DISETUJUI
+  DITOLAK
+  PERLU_PERBAIKAN
+}
+
+enum DisputeStatus {
+  BARU
+  DITINJAU
+  BUTUH_INFO
+  SELESAI
+  DITUTUP
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Profil dasar (A-04/A-05). Opsional agar data lama tetap valid.
+  phone            String?
+  photoUrl         String?
+  address          String?
+  city             String?
+  region           String?
+  emergencyContact String?
+  accountStatus    AccountStatus @default(AKTIF)
+
+  patients  Patient[]
+  caregiver Caregiver?
+  familyBookings Booking[] @relation("FamilyBookings")
+
+  // Relasi baru (ERD docs/ERD.md §1)
+  needs               ServiceNeed[]  @relation("NeedOwner")
+  interests           Interest[]     @relation("InterestSender")
+  payments            Payment[]      @relation("PaymentPayer")
+  verifiedPayments    Payment[]      @relation("PaymentVerifier")
+  refundedPayments    Payment[]      @relation("PaymentRefunder")
+  paidPayouts         Payout[]       @relation("PayoutPayer")
+  verifiedDeposits    Deposit[]      @relation("DepositVerifier")
+  approvedAttendances Attendance[]   @relation("AttendanceApprover")
+  overriddenAttendances Attendance[] @relation("AttendanceOverrider")
+  sentMessages        Message[]      @relation("MessageSender")
+  writtenReviews      Review[]       @relation("ReviewWriter")
+  reportedDisputes    Dispute[]      @relation("DisputeReporter")
+  reportedAgainst     Dispute[]      @relation("DisputeReported")
+  handledDisputes     Dispute[]      @relation("DisputeHandler")
+  notifications       Notification[]
+  consents            Consent[]
+}
+
+model Patient {
+  id        String   @id @default(cuid())
+  name      String
+  age       Int
+  tier      CareTier
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+  createdAt DateTime @default(now())
+
+  conditionNotes String?
+}
+
+model Caregiver {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  university     String
+  graduationYear Int
+  ratePerHour    Int
+  strStatus      StrStatus @default(MENUNGGU_STR)
+  tier           CareTier
+  location       String
+  isAvailable    Boolean   @default(true)
+  bookings       Booking[]
+  createdAt      DateTime @default(now())
+
+  // Profil profesional lanjutan (B-01). Opsional agar data lama tetap valid.
+  domicile         String?
+  serviceArea      String?
+  education        String?
+  experience       String?
+  competencies     String?
+  certifications   String?
+  strNo            String?
+  bio              String?
+  bankName         String?
+  bankAccountNo    String?
+  bankAccountName  String?
+  verificationStatus VerificationStatus @default(MENUNGGU)
+  verificationNote   String?
+  depositExpiresAt   DateTime?
+  ratingAvg          Float    @default(0)
+  totalFinished      Int      @default(0)
+
+  interests  Interest[]
+  contracts  Contract[]
+  deposits   Deposit[]
+  payouts    Payout[]
+  attendances Attendance[]
+  documents  CaregiverDocument[]
+  reviewsReceived Review[] @relation("ReviewTarget")
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  patientId   String
+  patient     Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  caregiverId String
+  caregiver   Caregiver     @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  familyId    String
+  family      User          @relation("FamilyBookings", fields: [familyId], references: [id], onDelete: Cascade)
+  date        DateTime
+  status      BookingStatus @default(pending)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// D-01 – D-04: Kebutuhan pasien
+model ServiceNeed {
+  id                String     @id @default(cuid())
+  patientUserId     String
+  patientUser       User       @relation("NeedOwner", fields: [patientUserId], references: [id], onDelete: Cascade)
+  patientProfileId  String?
+  serviceType       String
+  forWhom           String?
+  locationText      String
+  locationLat       Float?
+  locationLng       Float?
+  startDate         DateTime?
+  schedule          String?
+  durationHoursPerDay Int?
+  frequency         String?
+  totalHours        Int?
+  conditionDesc     String?
+  specialNeeds      String?
+  budgetEstimate    Int?
+  description       String?
+  status            NeedStatus @default(DRAFT)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  interests Interest[]
+  contract  Contract?
+}
+
+// E-01 – E-03: Minat mitra terhadap kebutuhan
+model Interest {
+  id            String         @id @default(cuid())
+  needId        String
+  need          ServiceNeed    @relation(fields: [needId], references: [id], onDelete: Cascade)
+  caregiverId   String
+  caregiver     Caregiver      @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  senderUserId  String
+  sender        User           @relation("InterestSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  intro         String?
+  relevantExp   String?
+  availability  String?
+  status        InterestStatus @default(MENUNGGU_RESPON)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  contract Contract?
+  messages Message[]
+
+  @@unique([needId, caregiverId])
+}
+
+// F-03: Kontrak Deal (pengunci nominal + jam + lokasi absensi)
+model Contract {
+  id                String         @id @default(cuid())
+  needId            String         @unique
+  need              ServiceNeed    @relation(fields: [needId], references: [id], onDelete: Cascade)
+  interestId        String?        @unique
+  interest          Interest?      @relation(fields: [interestId], references: [id], onDelete: SetNull)
+  patientUserId     String
+  // A partial unique index in the migration limits each caregiver to one active contract.
+  caregiverId       String
+  caregiver         Caregiver      @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  serviceType       String
+  schedule          String?
+  totalHours        Int
+  hourlyRate        Int
+  totalCost         Int
+  locationText      String
+  locationLat       Float?
+  locationLng       Float?
+  attendanceRadiusM Int?           @default(150)
+  scope             String?
+  startDate         DateTime?
+  endDate           DateTime?
+  cancelPolicy      String         @default("TANPA_REFUND_JIKA_PASIEN_BATAL")
+  status            ContractStatus @default(DEAL_MENUNGGU_BAYAR)
+  agreedAt          DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  payments    Payment[]
+  payout      Payout?
+  attendances Attendance[]
+  messages    Message[]
+  reviews     Review[]
+  disputes    Dispute[]
+}
+
+// G-01 – G-04: Pembayaran QRIS manual + escrow
+model Payment {
+  id                String        @id @default(cuid())
+  type              PaymentType
+  payerUserId       String
+  payer             User          @relation("PaymentPayer", fields: [payerUserId], references: [id], onDelete: Cascade)
+  contractId        String?
+  contract          Contract?     @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  depositId         String?
+  deposit           Deposit?      @relation(fields: [depositId], references: [id], onDelete: SetNull)
+  amount            Int
+  method            String        @default("QRIS_MANUAL")
+  proofImageUrl     String?
+  status            PaymentStatus @default(MENUNGGU_BAYAR)
+  refundAmount      Int?
+  refundProofUrl    String?
+  workedHours       Int?
+  missingHours      Int?
+  hourlyRateSnapshot Int?
+  verifiedByAdminId String?
+  verifiedBy        User?         @relation("PaymentVerifier", fields: [verifiedByAdminId], references: [id], onDelete: SetNull)
+  verifiedAt        DateTime?
+  refundedByAdminId String?
+  refundedBy        User?         @relation("PaymentRefunder", fields: [refundedByAdminId], references: [id], onDelete: SetNull)
+  rejectReason      String?
+  submittedAt       DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+// J-01 – J-04 + K-01: Payout gaji mitra (TF manual, potong admin)
+model Payout {
+  id                  String       @id @default(cuid())
+  contractId          String       @unique
+  contract            Contract     @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  caregiverId         String
+  caregiver           Caregiver    @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  grossAmount         Int
+  adminFeePercent     Int
+  adminFeeAmount      Int
+  netAmount           Int
+  bankNameSnap        String?
+  bankAccountNoSnap   String?
+  bankAccountNameSnap String?
+  status              PayoutStatus @default(BELUM_LAYAK)
+  reason              PayoutReason @default(SELESAI_NORMAL)
+  // Snapshot jam dari rekap absensi approved saat payout dibuat (audit, I-02/J-02)
+  workedMinutes       Int?
+  approvedSessions    Int?
+  proofTfUrl          String?
+  paidByAdminId       String?
+  paidBy              User?        @relation("PayoutPayer", fields: [paidByAdminId], references: [id], onDelete: SetNull)
+  paidAt              DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+// C-01 – C-07: Deposit / commitment fee 2 bulan
+model Deposit {
+  id                String        @id @default(cuid())
+  caregiverId       String
+  caregiver         Caregiver     @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  amount            Int
+  periodStart       DateTime?
+  periodEnd         DateTime?
+  status            DepositStatus @default(MENUNGGU_VERIFIKASI)
+  proofImageUrl     String?
+  hasClientInPeriod Boolean       @default(false)
+  verifiedByAdminId String?
+  verifiedBy        User?         @relation("DepositVerifier", fields: [verifiedByAdminId], references: [id], onDelete: SetNull)
+  refundProofUrl    String?
+  freezeReason      String?
+  frozenUntil       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  payments Payment[]
+}
+
+// H-01 – H-05: Absensi foto + waktu server + GPS + approve pasien
+model Attendance {
+  id                String           @id @default(cuid())
+  contractId        String
+  contract          Contract         @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  caregiverId       String
+  caregiver         Caregiver        @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  type              AttendanceType
+  photoUrl          String
+  serverTime        DateTime         @default(now())
+  lat               Float?
+  lng               Float?
+  accuracyM         Int?
+  insideRadius      Boolean          @default(true)
+  status            AttendanceStatus @default(MENUNGGU_APPROVAL_PASIEN)
+  sessionPairId     String?
+  rejectReason      String?
+  patientApprovedBy String?
+  approver          User?            @relation("AttendanceApprover", fields: [patientApprovedBy], references: [id], onDelete: SetNull)
+  patientApprovedAt DateTime?
+  adminOverrideBy   String?
+  overrider         User?            @relation("AttendanceOverrider", fields: [adminOverrideBy], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+}
+
+// B-02: Dokumen verifikasi mitra
+model CaregiverDocument {
+  id          String         @id @default(cuid())
+  caregiverId String
+  caregiver   Caregiver      @relation(fields: [caregiverId], references: [id], onDelete: Cascade)
+  kind        DocumentKind
+  fileUrl     String
+  status      DocumentStatus @default(MENUNGGU)
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+// F-01: Chat via platform (scoped interest / contract)
+model Message {
+  id           String    @id @default(cuid())
+  contractId   String?
+  contract     Contract? @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  interestId   String?
+  interest     Interest? @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  senderUserId String
+  sender       User      @relation("MessageSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  body         String
+  createdAt    DateTime  @default(now())
+}
+
+// L-01 – L-03: Review + reputasi
+model Review {
+  id                   String    @id @default(cuid())
+  contractId           String
+  contract             Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  reviewerUserId       String
+  reviewer             User      @relation("ReviewWriter", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+  reviewedCaregiverId  String
+  reviewedCaregiver    Caregiver @relation("ReviewTarget", fields: [reviewedCaregiverId], references: [id], onDelete: Cascade)
+  punctuality          Int
+  professionalism      Int
+  communication        Int
+  quality              Int
+  overall              Int
+  comment              String?
+  hiddenByAdmin        Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+
+  @@unique([contractId, reviewerUserId])
+}
+
+// M-01 – M-02 + K-02/K-03: Sengketa / laporan
+model Dispute {
+  id               String        @id @default(cuid())
+  contractId       String
+  contract         Contract      @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  reporterUserId   String
+  reporter         User          @relation("DisputeReporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+  reportedUserId   String?
+  reported         User?         @relation("DisputeReported", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  category         String
+  description      String
+  evidenceUrls     String?
+  status           DisputeStatus @default(BARU)
+  decision         String?
+  handledByAdminId String?
+  handler          User?         @relation("DisputeHandler", fields: [handledByAdminId], references: [id], onDelete: SetNull)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+// P-01 – P-03: Notifikasi in-app (MVP)
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  title     String
+  body      String?
+  linkUrl   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// B-05 + O-01: Persetujuan ketentuan (timestamp)
+model Consent {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind     String
+  version  String   @default("v1")
+  agreedAt DateTime @default(now())
+
+  @@unique([userId, kind, version])
+}
+
+// Idempotency-Key untuk semua request mutasi (POST/PATCH/PUT/DELETE).
+// actor = userId (atau 'anon'), route = METHOD + path, key = header Idempotency-Key.
+// Status IN_PROGRESS dipakai untuk menolak request paralel; COMPLETED menyimpan
+// response agar retry dengan key yang sama di-replay tanpa mengeksekusi ulang.
+model IdempotencyKey {
+  id           String    @id @default(cuid())
+  actor        String
+  route        String
+  key          String
+  requestHash  String
+  status       String
+  responseBody Json?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  @@unique([actor, route, key])
+  @@index([createdAt])
+}

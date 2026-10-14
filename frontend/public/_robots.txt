@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /family/dashboard
+Disallow: /caregiver/dashboard
+Disallow: /auth
+
+Sitemap: /sitemap.xml

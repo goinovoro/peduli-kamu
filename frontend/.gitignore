@@ -1,0 +1,11 @@
+node_modules/
+.nuxt/
+.output/
+.vercel/
+dist/
+coverage/
+.cache/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
