@@ -64,19 +64,17 @@ export default defineNuxtConfig({
   routeRules: {
     // Publik → SSR + cache untuk SEO
     '/': { prerender: true },
-    '/family/find': { ssr: true, swr: 60 },
-    '/mitra/profil/:id': { ssr: true, swr: 60 },
+    '/family/find': { ssr: true, isr: 60 },
+    '/mitra/profil/:id': { ssr: true, isr: 60 },
     // Privat → client-only, jangan di-crawl
     '/family/dashboard': { ssr: false },
     '/family/pembayaran': { ssr: false },
     '/family/approval': { ssr: false },
-    '/mitra/dashboard': { ssr: false, swr: false },
+    '/mitra/dashboard': { ssr: false },
     '/mitra/**': { ssr: false },
     '/notifikasi': { ssr: false },
     '/chat': { ssr: false },
     '/admin/**': { ssr: false },
     '/auth': { ssr: false },
-    // Backend proxy (opsional, hindari CORS saat SSR)
-    '/api/backend/**': { proxy: `${process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:4000/api/v1'}/**` },
   },
 });
